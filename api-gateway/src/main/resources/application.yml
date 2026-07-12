@@ -3,8 +3,7 @@ server:
 
 spring:
   application:
-    name: api-gateway
-
+    name: api-gateway`
   cloud:
     gateway:
       server:
@@ -21,6 +20,8 @@ spring:
                 - Path=/user/**
               filters:
                 - RewritePath=/user/(?<segment>.*), /${segment}
+                - CircuitBreaker=UserServiceCircuitBreaker
+
 
             - id: product-service
               uri: lb://PRODUCTSERVICE
@@ -57,3 +58,35 @@ eureka:
     register-with-eureka: true
   instance:
     prefer-ip-address: true
+
+resilience4j:
+    circuitbreaker:
+      instances:
+        UserServiceCircuitBreaker:
+          failure-rate-threshold: 50
+          minimum-number-of-calls: 5
+          sliding-window-size: 10
+          wait-duration-in-open-state: 10s
+          permitted-number-of-calls-in-half-open-state: 2
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  info:
+    env:
+      enabled: true
+  endpoint:
+    gateway:
+      access: unrestricted
+
+info:
+  app:
+   name: ${spring.application.name}
+   description: ApiGateway Microservice
+   version: 1.0.0
+
+
+
